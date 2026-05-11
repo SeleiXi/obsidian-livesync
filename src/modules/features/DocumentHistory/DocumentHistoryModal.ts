@@ -1,4 +1,4 @@
-import { TFile, Modal, App, DIFF_DELETE, DIFF_EQUAL, DIFF_INSERT, diff_match_patch } from "../../../deps.ts";
+import { TFile, Modal, App, DIFF_DELETE, DIFF_EQUAL, DIFF_INSERT, diff_match_patch, setIcon } from "../../../deps.ts";
 import { getPathFromTFile, isValidPath } from "../../../common/utils.ts";
 import { decodeBinary, escapeStringToHTML, readString } from "../../../lib/src/string_and_binary/convert.ts";
 import ObsidianLiveSyncPlugin from "../../../main.ts";
@@ -70,6 +70,10 @@ export class DocumentHistoryModal extends Modal {
     currentDiffIndex = -1;
     diffNavContainer!: HTMLDivElement;
     diffNavIndicator!: HTMLSpanElement;
+
+    // Modal enlargement state
+    isLarge = false;
+    enlargeBtn!: HTMLElement;
 
     constructor(
         app: App,
@@ -281,9 +285,34 @@ export class DocumentHistoryModal extends Modal {
         }
     }
 
+    /**
+     * Toggles the modal between standard and enlarged size.
+     */
+    toggleLarge() {
+        this.isLarge = !this.isLarge;
+        if (this.isLarge) {
+            this.modalEl.addClass("modal-large");
+            setIcon(this.enlargeBtn, "minimize-2");
+            this.enlargeBtn.setAttribute("aria-label", "Shrink");
+        } else {
+            this.modalEl.removeClass("modal-large");
+            setIcon(this.enlargeBtn, "maximize-2");
+            this.enlargeBtn.setAttribute("aria-label", "Enlarge");
+        }
+    }
+
     override onOpen() {
         const { contentEl } = this;
         this.titleEl.setText("Document History");
+
+        const headerButtons = this.titleEl.parentElement?.createDiv("modal-header-buttons");
+        if (headerButtons) {
+            this.enlargeBtn = headerButtons.createEl("button", { cls: "modal-header-button" });
+            setIcon(this.enlargeBtn, "maximize-2");
+            this.enlargeBtn.setAttribute("aria-label", "Enlarge");
+            this.enlargeBtn.addEventListener("click", () => this.toggleLarge());
+        }
+
         contentEl.empty();
         this.fileInfo = contentEl.createDiv("");
         this.fileInfo.addClass("op-info");

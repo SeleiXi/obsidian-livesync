@@ -2,6 +2,7 @@ import { type FilePath } from "./lib/src/common/types.ts";
 
 export {
     addIcon,
+    setIcon,
     App,
     debounce,
     Editor,

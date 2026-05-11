@@ -526,3 +526,39 @@ div.workspace-leaf-content[data-type=bases]  .livesync-status {
     outline-offset: 1px;
     border-radius: 2px;
 }
+
+/* Enlarged Modal */
+.modal-large {
+    width: 95vw !important;
+    max-width: none !important;
+    height: 95vh !important;
+    max-height: none !important;
+}
+
+.modal-large .op-scrollable {
+    max-height: calc(95vh - 250px) !important;
+}
+
+.modal-header-buttons {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: absolute;
+    right: 50px; /* Space for the default close button */
+    top: 15px;
+}
+
+.modal-header-button {
+    padding: 4px;
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-header-button:hover {
+    color: var(--text-normal);
+}
