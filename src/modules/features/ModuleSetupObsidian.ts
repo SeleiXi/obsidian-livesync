@@ -85,7 +85,7 @@ export class ModuleSetupObsidian extends AbstractModule {
     async encodeQR() {
         const settingString = encodeSettingsToQRCodeData(this.settings);
         const codeSVG = encodeQR(settingString, OutputFormat.SVG);
-        if (codeSVG == "") {
+        if (typeof codeSVG !== "string" || codeSVG == "") {
             return "";
         }
         const msg = $msg("Setup.QRCode", { qr_image: codeSVG });
