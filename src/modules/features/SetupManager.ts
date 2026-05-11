@@ -117,7 +117,7 @@ export class SetupManager extends AbstractModule {
      * @returns Promise that resolves to true if onboarding completed successfully, false otherwise
      */
     async onUseSetupURI(userMode: UserMode, setupURI: string = ""): Promise<boolean> {
-        const newSetting = await this.dialogManager.openWithExplicitCancel(UseSetupURI, setupURI);
+        const newSetting = (await this.dialogManager.openWithExplicitCancel(UseSetupURI, setupURI)) as any;
         if (newSetting === "cancelled") {
             this._log("Setup URI dialog cancelled.", LOG_LEVEL_NOTICE);
             return false;
@@ -140,7 +140,7 @@ export class SetupManager extends AbstractModule {
     ): Promise<boolean> {
         const originalSetting = JSON.parse(JSON.stringify(currentSetting)) as ObsidianLiveSyncSettings;
         const baseSetting = JSON.parse(JSON.stringify(originalSetting)) as ObsidianLiveSyncSettings;
-        const couchConf = await this.dialogManager.openWithExplicitCancel(SetupRemoteCouchDB, originalSetting);
+        const couchConf = (await this.dialogManager.openWithExplicitCancel(SetupRemoteCouchDB, originalSetting)) as any;
         if (couchConf === "cancelled") {
             this._log("Manual configuration cancelled.", LOG_LEVEL_NOTICE);
             return await this.onOnboard(userMode);
@@ -164,7 +164,7 @@ export class SetupManager extends AbstractModule {
         currentSetting: ObsidianLiveSyncSettings,
         activate = true
     ): Promise<boolean> {
-        const bucketConf = await this.dialogManager.openWithExplicitCancel(SetupRemoteBucket, currentSetting);
+        const bucketConf = (await this.dialogManager.openWithExplicitCancel(SetupRemoteBucket, currentSetting)) as any;
         if (bucketConf === "cancelled") {
             this._log("Manual configuration cancelled.", LOG_LEVEL_NOTICE);
             return await this.onOnboard(userMode);
@@ -188,7 +188,7 @@ export class SetupManager extends AbstractModule {
         currentSetting: ObsidianLiveSyncSettings,
         activate = true
     ): Promise<boolean> {
-        const p2pConf = await this.dialogManager.openWithExplicitCancel(SetupRemoteP2P, currentSetting);
+        const p2pConf = (await this.dialogManager.openWithExplicitCancel(SetupRemoteP2P, currentSetting)) as any;
         if (p2pConf === "cancelled") {
             this._log("Manual configuration cancelled.", LOG_LEVEL_NOTICE);
             return await this.onOnboard(userMode);
@@ -207,7 +207,7 @@ export class SetupManager extends AbstractModule {
      * @returns
      */
     async onlyE2EEConfiguration(userMode: UserMode, currentSetting: ObsidianLiveSyncSettings): Promise<boolean> {
-        const e2eeConf = await this.dialogManager.openWithExplicitCancel(SetupRemoteE2EE, currentSetting);
+        const e2eeConf = (await this.dialogManager.openWithExplicitCancel(SetupRemoteE2EE, currentSetting)) as any;
         if (e2eeConf === "cancelled") {
             this._log("E2EE configuration cancelled.", LOG_LEVEL_NOTICE);
             return await false;
@@ -226,7 +226,7 @@ export class SetupManager extends AbstractModule {
      * @returns
      */
     async onConfigureManually(originalSetting: ObsidianLiveSyncSettings, userMode: UserMode): Promise<boolean> {
-        const e2eeConf = await this.dialogManager.openWithExplicitCancel(SetupRemoteE2EE, originalSetting);
+        const e2eeConf = (await this.dialogManager.openWithExplicitCancel(SetupRemoteE2EE, originalSetting)) as any;
         if (e2eeConf === "cancelled") {
             this._log("Manual configuration cancelled.", LOG_LEVEL_NOTICE);
             return await this.onOnboard(userMode);

@@ -65,7 +65,7 @@ export function createFetchAllFlagHandler(
 
     // Handle the fetch all scheduled operation
     const onScheduled = async () => {
-        const method = await host.services.UI.dialogManager.openWithExplicitCancel(FetchEverything);
+        const method = (await host.services.UI.dialogManager.openWithExplicitCancel(FetchEverything)) as any;
         if (method === "cancelled") {
             log("Fetch everything cancelled by user.", LOG_LEVEL_NOTICE);
             await cleanupFlag();
@@ -98,7 +98,7 @@ export function createFetchAllFlagHandler(
         return await processVaultInitialisation(host, log, async () => {
             const settings = host.services.setting.currentSettings();
             await adjustSettingToRemoteIfNeeded(host, log, extra, settings);
-            const vaultStateToAction = mapVaultStateToAction[vault];
+            const vaultStateToAction = (mapVaultStateToAction as any)[vault];
             const { makeLocalChunkBeforeSync, makeLocalFilesBeforeSync } = vaultStateToAction;
             log(
                 `Fetching everything with settings: makeLocalChunkBeforeSync=${makeLocalChunkBeforeSync}, makeLocalFilesBeforeSync=${makeLocalFilesBeforeSync}`,
@@ -289,7 +289,7 @@ export function createRebuildFlagHandler(
 
     // Handle the rebuild everything scheduled operation
     const onScheduled = async () => {
-        const method = await host.services.UI.dialogManager.openWithExplicitCancel(RebuildEverything);
+        const method = (await host.services.UI.dialogManager.openWithExplicitCancel(RebuildEverything)) as any;
         if (method === "cancelled") {
             log("Rebuild everything cancelled by user.", LOG_LEVEL_NOTICE);
             await cleanupFlag();

@@ -177,7 +177,7 @@ export class ModuleRedFlag extends AbstractModule {
      * @returns true if can be continued, false if app restart is needed.
      */
     async onRebuildEverythingScheduled() {
-        const method = await this.dialogManager.openWithExplicitCancel(RebuildEverything);
+        const method = (await this.dialogManager.openWithExplicitCancel(RebuildEverything)) as any;
         if (method === "cancelled") {
             // Clean up the flag file and restart the app.
             this._log("Rebuild everything cancelled by user.", LOG_LEVEL_NOTICE);
@@ -199,7 +199,7 @@ export class ModuleRedFlag extends AbstractModule {
      * @returns true if can be continued, false if app restart is needed.
      */
     async onFetchAllScheduled() {
-        const method = await this.dialogManager.openWithExplicitCancel(FetchEverything);
+        const method = (await this.dialogManager.openWithExplicitCancel(FetchEverything)) as any;
         if (method === "cancelled") {
             this._log("Fetch everything cancelled by user.", LOG_LEVEL_NOTICE);
             // Clean up the flag file and restart the app.
@@ -239,7 +239,7 @@ export class ModuleRedFlag extends AbstractModule {
         return await this.processVaultInitialisation(async () => {
             await this.adjustSettingToRemoteIfNeeded(extra, this.settings);
             // Okay, proceed to fetch everything.
-            const { makeLocalChunkBeforeSync, makeLocalFilesBeforeSync } = mapVaultStateToAction[vault];
+            const { makeLocalChunkBeforeSync, makeLocalFilesBeforeSync } = (mapVaultStateToAction as any)[vault];
             this._log(
                 `Fetching everything with settings: makeLocalChunkBeforeSync=${makeLocalChunkBeforeSync}, makeLocalFilesBeforeSync=${makeLocalFilesBeforeSync}`,
                 LOG_LEVEL_INFO
