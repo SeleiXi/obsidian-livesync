@@ -1,13 +1,16 @@
-import { type TFile } from "@/deps.ts";
+import { TFile } from "@/deps.ts";
 import { eventHub } from "../../common/events.ts";
 import { EVENT_REQUEST_SHOW_HISTORY } from "../../common/obsidianEvents.ts";
 import type { FilePathWithPrefix, LoadedEntry, DocumentID } from "../../lib/src/common/types.ts";
 import { AbstractObsidianModule } from "../AbstractObsidianModule.ts";
 import { DocumentHistoryModal } from "./DocumentHistory/DocumentHistoryModal.ts";
+import { DocumentHistoryView, VIEW_TYPE_DOCUMENT_HISTORY_SVELTE } from "./DocumentHistory/DocumentHistoryView.ts";
 import { fireAndForget } from "octagonal-wheels/promises";
 
 export class ModuleObsidianDocumentHistory extends AbstractObsidianModule {
     _everyOnloadStart(): Promise<boolean> {
+        this.registerView(VIEW_TYPE_DOCUMENT_HISTORY_SVELTE, (leaf) => new DocumentHistoryView(leaf, this.plugin));
+
         this.addCommand({
             id: "livesync-history",
             name: "Show history",
@@ -18,12 +21,36 @@ export class ModuleObsidianDocumentHistory extends AbstractObsidianModule {
         });
 
         this.addCommand({
+            id: "livesync-history-svelte",
+            name: "Show history (Svelte)",
+            callback: () => {
+                const file = this.services.vault.getActiveFilePath();
+                if (file) fireAndForget(() => this.showHistorySvelte(file));
+            },
+        });
+
+        this.addCommand({
             id: "livesync-filehistory",
             name: "Pick a file to show history",
             callback: () => {
                 fireAndForget(async () => await this.fileHistory());
             },
         });
+
+        this.plugin.registerEvent(
+            this.app.workspace.on("file-menu", (menu, file) => {
+                if (file instanceof TFile) {
+                    menu.addItem((item) => {
+                        item.setTitle("Show history (Svelte)")
+                            .setIcon("clock")
+                            .onClick(() => {
+                                fireAndForget(() => this.showHistorySvelte(file.path as FilePathWithPrefix));
+                            });
+                    });
+                }
+            })
+        );
+
         eventHub.onEvent(
             EVENT_REQUEST_SHOW_HISTORY,
             ({ file, fileOnDB }: { file: TFile | FilePathWithPrefix; fileOnDB: LoadedEntry }) => {
@@ -31,6 +58,18 @@ export class ModuleObsidianDocumentHistory extends AbstractObsidianModule {
             }
         );
         return Promise.resolve(true);
+    }
+
+    async showHistorySvelte(file: TFile | FilePathWithPrefix) {
+        const filePath = file instanceof TFile ? file.path : file;
+        const leaves = this.app.workspace.getLeavesOfType(VIEW_TYPE_DOCUMENT_HISTORY_SVELTE);
+        const leaf = leaves[0] ?? this.app.workspace.getLeaf(true);
+        await leaf.setViewState({
+            type: VIEW_TYPE_DOCUMENT_HISTORY_SVELTE,
+            active: true,
+            state: { file: filePath },
+        });
+        await this.app.workspace.revealLeaf(leaf);
     }
 
     showHistory(file: TFile | FilePathWithPrefix, id?: DocumentID) {
