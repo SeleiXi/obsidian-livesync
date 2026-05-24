@@ -1,0 +1,64 @@
+name: Dev Release
+
+on:
+  push:
+    branches:
+      - seleixi-dev
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: dev-release
+  cancel-in-progress: true
+
+jobs:
+  build-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build --if-present
+
+      - name: Package
+        run: |
+          mkdir obsidian-livesync
+          cp main.js manifest.json styles.css README.md obsidian-livesync
+          zip -r obsidian-livesync.zip obsidian-livesync
+
+      - name: Move dev tag
+        run: |
+          git tag -f dev "${GITHUB_SHA}"
+          git push -f origin refs/tags/dev
+
+      - name: Publish dev release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: dev
+          name: dev
+          body: |
+            Automated dev build from `${{ github.sha }}` on `seleixi-dev`.
+          files: |
+            obsidian-livesync.zip
+            main.js
+            manifest.json
+            styles.css
+          draft: false
+          prerelease: true
+          make_latest: false
+          overwrite_files: true
