@@ -65,6 +65,7 @@ type LocalStorageCapableApp = App & {
     saveLocalStorage?: (key: string, value: string | null) => void | Promise<void>;
 };
 
+const HISTORY_DISPLAY_REVISION_LIMIT = 100;
 const HISTORY_BACKFILL_BATCH_SIZE = 100;
 
 export class DocumentHistoryModal extends Modal {
@@ -159,10 +160,12 @@ export class DocumentHistoryModal extends Modal {
         try {
             await this.backfillRemoteHistory();
             const w = await db.getRaw(this.id, { revs_info: true });
-            this.revs_info = w._revs_info?.filter((e) => e?.status == "available") ?? [];
+            this.revs_info = this.pickDisplayRevisions(w._revs_info);
             this.range.max = `${Math.max(this.revs_info.length - 1, 0)}`;
             this.range.value = this.range.max;
-            this.fileInfo.setText(`${this.file} / ${this.revs_info.length} revisions`);
+            this.fileInfo.setText(
+                `${this.file} / ${this.revs_info.length}${this.revs_info.length == HISTORY_DISPLAY_REVISION_LIMIT ? " latest" : ""} revisions`
+            );
             await this.loadRevs(initialRev);
         } catch (ex) {
             if (isErrorOfMissingDoc(ex)) {
@@ -175,6 +178,10 @@ export class DocumentHistoryModal extends Modal {
                 Logger(ex, LOG_LEVEL_VERBOSE);
             }
         }
+    }
+
+    pickDisplayRevisions(revsInfo: PouchDB.Core.RevisionInfo[] | undefined): PouchDB.Core.RevisionInfo[] {
+        return (revsInfo ?? []).filter((e) => e?.status == "available").slice(0, HISTORY_DISPLAY_REVISION_LIMIT);
     }
 
     async backfillRemoteHistory(): Promise<void> {
@@ -216,13 +223,13 @@ export class DocumentHistoryModal extends Modal {
                 return;
             }
 
-            const remoteAvailableRevs = (remoteDoc._revs_info ?? [])
-                .filter((e) => e.status == "available")
-                .map((e) => e.rev);
+            const remoteAvailableRevs = this.pickDisplayRevisions(remoteDoc._revs_info).map((e) => e.rev);
             const missingRevs = remoteAvailableRevs.filter((rev) => !localAvailable.has(rev));
             if (missingRevs.length == 0) return;
 
-            this.fileInfo.setText(`${this.file} / loading ${missingRevs.length} remote revisions...`);
+            this.fileInfo.setText(
+                `${this.file} / loading ${missingRevs.length} remote revisions for latest history...`
+            );
             let restored = 0;
             for (let i = 0; i < missingRevs.length; i += HISTORY_BACKFILL_BATCH_SIZE) {
                 const batch = missingRevs.slice(i, i + HISTORY_BACKFILL_BATCH_SIZE);
@@ -242,7 +249,10 @@ export class DocumentHistoryModal extends Modal {
                 restored += docs.length;
             }
             if (restored > 0) {
-                Logger(`Backfilled ${restored} remote history revision(s) for ${this.file}`, LOG_LEVEL_INFO);
+                Logger(
+                    `Backfilled ${restored} remote history revision(s) for ${this.file} within latest ${HISTORY_DISPLAY_REVISION_LIMIT}`,
+                    LOG_LEVEL_INFO
+                );
             }
         } catch (ex) {
             Logger(`Could not backfill remote history for ${this.file}`, LOG_LEVEL_VERBOSE);
@@ -508,7 +518,7 @@ export class DocumentHistoryModal extends Modal {
         }
 
         const db = this.core.localDatabase;
-        const limit = 100;
+        const limit = HISTORY_DISPLAY_REVISION_LIMIT;
         const totalRevs = this.revs_info.length;
         const end = Math.min(totalRevs, limit);
 
