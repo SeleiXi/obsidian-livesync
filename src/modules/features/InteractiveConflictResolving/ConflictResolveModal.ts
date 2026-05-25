@@ -2,7 +2,6 @@ import { App, Modal } from "../../../deps.ts";
 import { DIFF_DELETE, DIFF_EQUAL, DIFF_INSERT } from "diff-match-patch";
 import { CANCELLED, LEAVE_TO_SUBSEQUENT, type diff_result } from "../../../lib/src/common/types.ts";
 import { escapeStringToHTML } from "../../../lib/src/string_and_binary/convert.ts";
-import { delay } from "../../../lib/src/common/utils.ts";
 import { eventHub } from "../../../common/events.ts";
 import { globalSlipBoard } from "../../../lib/src/bureau/bureau.ts";
 
@@ -21,6 +20,7 @@ export class ConflictResolveModal extends Modal {
     response: MergeDialogResult = CANCELLED;
     isClosed = false;
     consumed = false;
+    slipKey = "";
 
     title: string = "Conflicting changes";
 
@@ -36,6 +36,7 @@ export class ConflictResolveModal extends Modal {
         super(app);
         this.result = diff;
         this.filename = filename;
+        this.slipKey = `${filename}:${Date.now()}:${Math.random()}`;
         this.pluginPickMode = pluginPickMode || false;
         if (this.pluginPickMode) {
             this.title = "Pick a version";
@@ -79,7 +80,7 @@ export class ConflictResolveModal extends Modal {
         const { contentEl } = this;
         // Send cancel signal for the previous merge dialogue
         // if not there, simply be ignored.
-        globalSlipBoard.submit("conflict-resolved", this.filename, CANCELLED);
+        eventHub.emitEvent("conflict-cancelled", this.filename);
         if (this.offEvent) {
             this.offEvent();
         }
@@ -180,12 +181,11 @@ export class ConflictResolveModal extends Modal {
             return;
         }
         this.consumed = true;
-        globalSlipBoard.submit("conflict-resolved", this.filename, this.response);
+        globalSlipBoard.submit("conflict-resolved", this.slipKey, this.response);
     }
 
     async waitForResult(): Promise<MergeDialogResult> {
-        await delay(100);
-        const r = await globalSlipBoard.awaitNext("conflict-resolved", this.filename);
+        const r = await globalSlipBoard.awaitNext("conflict-resolved", this.slipKey);
         return r;
     }
 }
