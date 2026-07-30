@@ -12,6 +12,16 @@ Earlier releases remain available in the 0.25 release history and the legacy rel
 
 ## Unreleased
 
+## 1.0.1-beta.1009
+
+30th July, 2026
+
+### Interface
+
+#### Improved
+
+- Document History now provides compact older and newer revision buttons beside the slider, shows the current revision position, and keeps search-result navigation separate.
+
 ## 1.0.0
 
 27th July, 2026
